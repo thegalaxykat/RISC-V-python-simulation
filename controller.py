@@ -4,6 +4,9 @@ to the model to be executed. Stores instruction and data memory as dictionaries.
 """
 
 import abc
+from riscv_assembler.convert import AssemblyConverter as convertFile
+from riscv_assembler.tools import AssemblyTools as convertLine
+# note that Convert works for whole files and Tools works for individual lines
 
 class Controller:
     """
@@ -30,7 +33,7 @@ class Controller:
     def run(self, filename=None):
         """
         Gets assembly from user (either line-by-line instructions or from an
-        .asm file), compiles it to binary, writes to instruction memory, and
+        .s file), compiles it to binary, writes to instruction memory, and
         runs the model.
         """
 
