@@ -54,4 +54,6 @@ class MVP_Model(Model):
     
     def do_rst(self):
         #self._pc TODO make me
+        self._pc = 0
+        self._register_file.do_rst
         pass
