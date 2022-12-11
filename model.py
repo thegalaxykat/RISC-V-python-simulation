@@ -52,8 +52,8 @@ class MVP_Model(Model):
     def do_clock(self):
         pass
     
-    def do_rst(self):
+    def do_reset(self):
         #self._pc TODO make me
         self._pc = 0
-        self._register_file.do_rst
+        self._register_file.do_reset
         pass
