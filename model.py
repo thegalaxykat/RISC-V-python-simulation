@@ -1,4 +1,5 @@
 from abc import ABC,abstractmethod
+from bitstring import BitArray
 
 class Model(ABC):
 
@@ -50,10 +51,11 @@ class MVP_Model(Model):
         return self._register_file
 
     def do_clock(self):
+        instruction = self._controller.get_instruct_mem(int(self._pc))
+
         pass
     
     def do_reset(self):
-        #self._pc TODO make me
-        self._pc = 0
-        self._register_file.do_reset
+        self._pc = BitArray(0x00000000)
+        #self._register_file.do_reset()
         pass
