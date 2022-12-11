@@ -2,7 +2,7 @@
 Controller for the RISC-V simulator. Gets assembly from user and passes binary 
 to the model to be executed. Stores instruction and data memory as dictionaries.
 """
-
+from model import Model
 import abc
 from riscv_assembler.convert import AssemblyConverter as convertFile
 from riscv_assembler.tools import AssemblyTools as convertLine
@@ -13,11 +13,12 @@ class Controller:
     Gets Assembly and passes the binary instructions to instruction memory.
     """
     
-    def __init__(self, model, view):
+    def __init__(self, model: Model, view):
         """
         Initializes controller with model and view and creates empty memory
         """
-        self.model = model.set_controller(self)
+        model.set_controller(self)
+        self.model = model
         self.view = view
         # reset model
         self.model.do_reset()
