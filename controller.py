@@ -2,10 +2,15 @@
 Controller for the RISC-V simulator. Gets assembly from user and passes binary 
 to the model to be executed. Stores instruction and data memory as dictionaries.
 """
-from model import Model
+
 import abc
+
+import bitstring
 from riscv_assembler.convert import AssemblyConverter as convertFile
 from riscv_assembler.tools import AssemblyTools as convertLine
+
+from model import Model
+
 # note that Convert works for whole files and Tools works for individual lines
 
 class Controller:
@@ -20,6 +25,7 @@ class Controller:
         model.set_controller(self)
         self.model = model
         self.view = view
+
         # reset model
         self.model.do_reset()
 
@@ -27,9 +33,6 @@ class Controller:
         self.instruction_memory = {}
         self.data_memory = {}
         
-        # REVIEW should we initialize the memory with addresses
-        # and 0s or leave it empty? Also: Are how are we storing the binary?
-        # in a str?
 
     def run(self, filename=None):
         """
@@ -73,20 +76,44 @@ class Controller:
     def get_instruct_mem(self, address):
         """
         Returns instruction at address
+
+        Args:
+            address (int): address to get
         """
+        if address in self.instruction_memory:
+            return self.instruction_memory[address]
+        
         # throws error if trying to access mem that doesn't exist
+        else:
+            raise Exception("Address does not exist in instruction memory")
 
 
     def get_data_mem(self, address):
         """
         Returns data at address
+        Args:
+            address (int): address to get
         """
+        if address in self.data_memory:
+            return self.data_memory[address]
+
         # throws error if trying to access mem that doesn't exist
+        else:
+            raise Exception("Address does not exist in data memory")
+        
 
     def set_data_mem(self, address, data):
         """
         Sets data at address
+
+        Args:
+            address (int): address to set
+            data (bitstring): data to set
         """
+        try:
+            self.data_memory[address] = data
+        except: 
+            raise Exception("Data could not be set in data memory")
 
 
 # abstract base class for prompts since they may be different for different
