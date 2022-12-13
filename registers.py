@@ -46,4 +46,9 @@ class Register:
         """
         data_string = str(self._data)
         return data_string
+    
+    def __eq__(self,__o):
+        if isinstance(__o,Register):
+            return self._data == __o._data & self._address == __o._address
+        return False
 

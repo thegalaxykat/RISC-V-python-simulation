@@ -10,6 +10,7 @@ from riscv_assembler.convert import AssemblyConverter as convertFile
 from riscv_assembler.tools import AssemblyTools as convertLine
 
 from model import Model
+from test_strings import memh_dict
 
 # note that Convert works for whole files and Tools works for individual lines
 
@@ -43,7 +44,13 @@ class Controller:
 
         # line-by-line mode
         if filename == None:
-            
+            self.instruction_memory=memh_dict
+            old_reg = self.model.get_registers
+            while old_reg == self.model.get_registers:
+                self.model.do_clock()
+            print(self.model)
+
+
             # get PC from model
 
             # get instruction line from user

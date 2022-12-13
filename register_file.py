@@ -119,3 +119,8 @@ class RegisterFile:
                 lines.append(reg_line)
             lines.append(end_line)
             return "\n".join(lines)
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o,RegisterFile):
+            return self.regfile == __o.regfile
+        return False
