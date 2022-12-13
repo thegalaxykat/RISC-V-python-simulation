@@ -74,15 +74,27 @@ class RegisterFile:
                             break
                     self.modified_regs.append(k)
 
-    def switch_display():
+    def switch_display(self):
         """
         Method to switch between full register-file print out and
         the non empty 
         """
+        if(self.fullreg != True):
+            self.fullreg = True
+        else:
+            self.fullreg = False
+
     def get_data(self,addr):
         return self.regfile[int(addr)].data
 
     def set_data(self,addr,data):
+        if (len(self.modified_regs) == 0): 
+            self.modified_regs.append(addr)
+        else:
+            for m in range(len(self.modified_regs)):
+                if(addr == self.modified_regs[m]):
+                    break
+            self.modified_regs.append(addr)
         return self.regfile[int(addr)].write_data(data)
     
     def __repr__(self):
@@ -90,7 +102,7 @@ class RegisterFile:
         Return a string representing the data in the register
         """
         reg_index = ["x00","x01","x02","x03","x04","x05","x06","x07","x08","x09","x10","x11","x12","x13","x14","x15","x16","x17","x18","x19","x20","x21","x22","x23","x24","x25","x26","x27","x28","x29","x30","x31"]
-        reg_names = ["zero", "ra", "sp","gp","tp","t0","t1","t2","s0","s1","a0","a1","a2","a3","a4","a5","a6","s2","s3","s4","s5","s6","s7","s8","s9","s10","s11","t3","t4","t5","t6"]
+        reg_names = ["zero", "ra", "sp","gp","tp","t0","t1","t2","s0","s1","a0","a1","a2","a3","a4","a5","a6","a7", "s2","s3","s4","s5","s6","s7","s8","s9","s10","s11","t3","t4","t5","t6"]
 
         title = "+----Register File----+"
         end_line = "+---------------------+"
@@ -98,9 +110,11 @@ class RegisterFile:
 
         if (self.fullreg == True):
             for l in range(32):
-                data = self.regfile[l].data()
-                if (data is None):
+                raw_data = self.regfile[l].data
+                if (raw_data is None):
                     data = "xxxxxxxx"
+                else:
+                    data = '{0:08X}'.format(raw_data)
                 if (len(reg_names[l]) == 4):
                     reg_line = f"|{reg_index[l]} | {reg_names[l]} | {data}|"
                     lines.append(reg_line)
@@ -113,9 +127,11 @@ class RegisterFile:
             lines.append(end_line)
             return "\n".join(lines)
         else:
-            sorted_list = self.modified_regs.sort()
-            for n in sorted_list:
-                reg_line = f"|{reg_index[n]} | {reg_names[n]} | {self.regfile[n].data()}|"
+            self.modified_regs.sort()
+            for n in self.modified_regs:
+                raw_data = self.regfile[n].data
+                data = '{0:08X}'.format(raw_data)
+                reg_line = f"|{reg_index[n]} | {reg_names[n]} | {data}|"
                 lines.append(reg_line)
             lines.append(end_line)
             return "\n".join(lines)
