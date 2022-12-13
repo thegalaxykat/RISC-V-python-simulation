@@ -6,8 +6,8 @@ to the model to be executed. Stores instruction and data memory as dictionaries.
 import abc
 
 import bitstring
-from riscv_assembler.convert import AssemblyConverter as convertFile
-#from riscv_assembler.tools import AssemblyTools as convertLine
+from riscv_assembler.convert import AssemblyConverter
+from riscv_assembler.utils import *
 
 from model import Model
 from test_strings import memh_dict
