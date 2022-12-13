@@ -114,7 +114,7 @@ class MVP_Model(Model):
     def memory_address(self,instruction):
         imm = self.get_imm(instruction)
         rs1_addr = instruction[19:15]
-        rs1 = self._register_file.data(rs1_addr)
+        rs1 = self._register_file.get_data(rs1_addr)
         addr = rs1+imm
         return addr # goes to memory write/read
 
@@ -124,36 +124,36 @@ class MVP_Model(Model):
 
     def memory_write_back(self,data):
         rd = self.current_instruction[7:11]
-        self._register_file.write_data(rd,data)
+        self._register_file.set_data(rd,data)
         return None
 
     def memory_write(self,addr):
         rs2_addr = self.current_instruction[24:20]
-        rs2 = self._register_file.data(rs2_addr)
+        rs2 = self._register_file.get_data(rs2_addr)
         self._controller.set_data_mem(addr,rs2)
         return None
 
     def execute_i(self,instruction):
         imm = self.get_imm(instruction)
         rs1_addr = instruction[19:15]
-        rs1 = self._register_file.data(rs1_addr)
+        rs1 = self._register_file.get_data(rs1_addr)
         code = instruction[12:14]+instruction[30]
         return self._alu(code,rs1,imm)
 
     def execute_r(self,instruction):
         rs1_addr = instruction[19:15]
-        rs1 = self._register_file.data(rs1_addr)
+        rs1 = self._register_file.get_data(rs1_addr)
         rs2_addr = instruction[24:20]
-        rs2 = self._register_file.data(rs2_addr)
+        rs2 = self._register_file.get_data(rs2_addr)
         code = instruction[12:15]+instruction[30]
         return self._alu(code,rs1,rs2)
 
     def branch(self,instruction):
         imm = self.get_imm(instruction)
         rs1_addr = instruction[19:15]
-        rs1 = self._register_file.data(rs1_addr)
+        rs1 = self._register_file.get_data(rs1_addr)
         rs2_addr = instruction[24:20]
-        rs2 = self._register_file.data(rs2_addr)
+        rs2 = self._register_file.get_data(rs2_addr)
         branch = False
         match(instruction[12:14]):
             case[FUNCT3_BEQ]:
@@ -173,13 +173,13 @@ class MVP_Model(Model):
     def jump_and_link_register(self,instruction):
         imm = self.get_imm(instruction)
         rs1_addr = instruction[19:15]
-        rs1 = self._register_file.data(rs1_addr)
+        rs1 = self._register_file.get_data(rs1_addr)
         self._next_pc = BitArray(imm.int+rs1,length=32)
         return self._pc + 4
 
     def alu_writeback(self,data):
         rd = self.current_instruction[7:11]
-        self._register_file.write_data(rd,data)
+        self._register_file.set_data(rd,data)
         return None
 
 
@@ -238,8 +238,3 @@ class MVP_Model(Model):
 
         def sra(self,a,b):
             return BitArray(int=a.int//b.uint,length=32)
-
-        
-
-
-BitArray()
