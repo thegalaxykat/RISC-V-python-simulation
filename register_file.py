@@ -79,7 +79,11 @@ class RegisterFile:
         Method to switch between full register-file print out and
         the non empty 
         """
+    def get_data(self,addr):
+        return self.regfile[int(addr)].data
 
+    def set_data(self,addr,data):
+        return self.regfile[int(addr)].write_data(data)
     
     def __repr__(self):
         """
