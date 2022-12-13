@@ -74,6 +74,12 @@ class RegisterFile:
                             break
                     self.modified_regs.append(k)
 
+    def switch_display():
+        """
+        Method to switch between full register-file print out and
+        the non empty 
+        """
+
     
     def __repr__(self):
         """
@@ -83,28 +89,29 @@ class RegisterFile:
         reg_names = ["zero", "ra", "sp","gp","tp","t0","t1","t2","s0","s1","a0","a1","a2","a3","a4","a5","a6","s2","s3","s4","s5","s6","s7","s8","s9","s10","s11","t3","t4","t5","t6"]
 
         title = "+----Register File----+"
+        end_line = "+---------------------+"
         lines = [title]
 
         if (self.fullreg == True):
             for l in range(32):
+                data = self.regfile[l].data()
+                if (data is None):
+                    data = "xxxxxxxx"
                 if (len(reg_names[l]) == 4):
-                    reg_line = f"|{reg_index} | {reg_names[l]} | {self.regfile[l].data()}|"
+                    reg_line = f"|{reg_index[l]} | {reg_names[l]} | {data}|"
                     lines.append(reg_line)
                 if (len(reg_names[l]) == 3):
-                    reg_line = f"|{reg_index} | {reg_names[l]}  | {self.regfile[l].data()}|"
+                    reg_line = f"|{reg_index[l]} | {reg_names[l]}  | {data}|"
                     lines.append(reg_line)
                 if (len(reg_names[l]) == 2):
-                    reg_line = f"|{reg_index} | {reg_names[l]}   | {self.regfile[l].data()}|"
+                    reg_line = f"|{reg_index[l]} | {reg_names[l]}   | {data}|"
                     lines.append(reg_line)
+            lines.append(end_line)
             return "\n".join(lines)
         else:
-            
-
-
-
-
-
-+----Register File----+
-|x00 | zero | 00000000|
-|x01 | ra   | xxxxxxxx|
-|x02 | sp   | xxxxxxxx|
+            sorted_list = self.modified_regs.sort()
+            for n in sorted_list:
+                reg_line = f"|{reg_index[n]} | {reg_names[n]} | {self.regfile[n].data()}|"
+                lines.append(reg_line)
+            lines.append(end_line)
+            return "\n".join(lines)
