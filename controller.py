@@ -7,7 +7,7 @@ import abc
 
 import bitstring
 from riscv_assembler.convert import AssemblyConverter as convertFile
-from riscv_assembler.tools import AssemblyTools as convertLine
+#from riscv_assembler.tools import AssemblyTools as convertLine
 
 from model import Model
 from test_strings import memh_dict
@@ -45,8 +45,13 @@ class Controller:
         # line-by-line mode
         if filename == None:
             self.instruction_memory=memh_dict
-            old_reg = self.model.get_registers
-            while old_reg == self.model.get_registers:
+            
+            old_reg = None
+            old_pc = None
+            while not(self.model.get_registers == old_reg) or not (old_pc == self.model.get_pc):
+                old_reg = self.model.get_registers
+                old_pc = self.model.get_pc
+                print(self.model.get_pc)
                 self.model.do_clock()
             print(self.model)
 
@@ -92,7 +97,10 @@ class Controller:
         
         # throws error if trying to access mem that doesn't exist
         else:
-            raise Exception("Address does not exist in instruction memory")
+            print("no more instruction mem")
+            print(self.model)
+            return None
+            #raise Exception("Address does not exist in instruction memory")
 
 
     def get_data_mem(self, address):

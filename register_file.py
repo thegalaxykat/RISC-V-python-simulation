@@ -2,6 +2,9 @@
 RISC-V register file implementation.
 """
 from registers import Register
+import bitstring
+bitstring.lsb0 = True
+BitArray = bitstring.BitArray
 
 # def _register_names():
 #     reg_index = ["x00","x01","x02","x03","x04","x05","x06","x07","x08","x09","x10","x11","x12","x13","x14","x15","x16","x17","x18","x19","x20","x21","x22","x23","x24","x25","x26","x27","x28","x29","x30","x31"]
@@ -35,7 +38,7 @@ class RegisterFile:
         self.we = False
         self.regfile = []
         self.modified_regs = []
-        self.fullreg = False
+        self.fullreg = True
         self.generate_registers()
 
     def generate_registers(self):
@@ -44,7 +47,7 @@ class RegisterFile:
         """
         for i in range(32):
             if ( i == 0 ):
-                self.regfile.append(Register(i, 0))
+                self.regfile.append(Register(i, BitArray(int=0,length=32)))
             else:
                 self.regfile.append(Register(i))
     
@@ -85,9 +88,11 @@ class RegisterFile:
             self.fullreg = False
 
     def get_data(self,addr):
-        return self.regfile[int(addr)].data
+        return self.regfile[addr.uint].data
 
     def set_data(self,addr,data):
+        if addr.uint == 0:
+            return None
         if (len(self.modified_regs) == 0): 
             self.modified_regs.append(addr)
         else:
@@ -95,7 +100,7 @@ class RegisterFile:
                 if(addr == self.modified_regs[m]):
                     break
             self.modified_regs.append(addr)
-        return self.regfile[int(addr)].write_data(data)
+        return self.regfile[addr.uint].write_data(data)
     
     def __repr__(self):
         """
@@ -114,7 +119,7 @@ class RegisterFile:
                 if (raw_data is None):
                     data = "xxxxxxxx"
                 else:
-                    data = '{0:08X}'.format(raw_data)
+                    data = raw_data.hex#'{0:08X}'.format(raw_data.int)
                 if (len(reg_names[l]) == 4):
                     reg_line = f"|{reg_index[l]} | {reg_names[l]} | {data}|"
                     lines.append(reg_line)

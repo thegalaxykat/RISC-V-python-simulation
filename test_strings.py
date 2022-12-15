@@ -3,7 +3,7 @@ import bitstring
 bitstring.lsb0 = True
 BitArray = bitstring.BitArray
 
-memh_str = """00300113 // PC=0x0 line=10: addi sp, zero, 3
+memh_str_f = """00300113 // PC=0x0 line=10: addi sp, zero, 3
 01c11113 // PC=0x4 line=11: slli sp, sp, 28
 3fc10113 // PC=0x8 line=12: addi sp, sp, 1020
 00100513 // PC=0xc line=15: addi a0, zero, 1
@@ -107,5 +107,51 @@ fc5ff0ef // PC=0x178 line=149: call FIBONACCI # fib(n-2)
 fedff06f // PC=0x194 line=159: j FIB_STACK_POP_AND_RETURN
 fff00513 // PC=0x198 line=161: addi a0, zero, -1
 fe5ff06f // PC=0x19c line=162: j FIB_STACK_POP_AND_RETURN"""
-memh_bit = [BitArray("0x"+line.split(" ")[0],length=32) for line in memh_str.split("\n")]
-memh_dict = dict(enumerate(memh_bit))
+
+memh_str_ls = """00300193 // PC=0x0 line=4: addi gp, zero, 3
+01c19193 // PC=0x4 line=5: slli gp, gp, 28
+20018113 // PC=0x8 line=6: addi sp, gp, 512
+01100293 // PC=0xc line=7: addi t0, zero, 17
+fe512e23 // PC=0x10 line=9: sw t0, -4(sp)
+01128293 // PC=0x14 line=10: addi t0, t0, 17
+fe512c23 // PC=0x18 line=11: sw t0, -8(sp)
+01128293 // PC=0x1c line=12: addi t0, t0, 17
+fe512a23 // PC=0x20 line=13: sw t0, -12(sp)
+01128293 // PC=0x24 line=14: addi t0, t0, 17
+fe512823 // PC=0x28 line=15: sw t0, -16(sp)
+ff012283 // PC=0x2c line=17: lw t0, -16(sp)
+0051a023 // PC=0x30 line=18: sw t0, 0(gp)
+06502c23 // PC=0x34 line=19: sw t0, 120(zero)
+ff412303 // PC=0x38 line=20: lw t1, -12(sp) // pc 56
+0061a223 // PC=0x3c line=21: sw t1, 4(gp)
+06602e23 // PC=0x40 line=22: sw t1, 124(zero)
+ff812383 // PC=0x44 line=23: lw t2, -8(sp)
+0071a423 // PC=0x48 line=24: sw t2, 8(gp)
+08702023 // PC=0x4c line=25: sw t2, 128(zero)
+ffc12e03 // PC=0x50 line=26: lw t3, -4(sp)
+01c1a623 // PC=0x54 line=27: sw t3, 12(gp)
+09c02223 // PC=0x58 line=28: sw t3, 132(zero)"""
+memh_str_b="""00100093 // PC=0x0 line=6: addi x1, x0, 1
+fff00113 // PC=0x4 line=7: addi x2, x0, -1
+00000f93 // PC=0x8 line=8: addi x31, x0, 0
+00000463 // PC=0xc line=9: beq x0, x0, BEQ_WORKS
+001f8f93 // PC=0x10 line=10: addi x31, x31, 1 # Should never run!
+00100513 // PC=0x14 line=11: BEQ_WORKS: addi x10, x0, 1
+00209463 // PC=0x18 line=12: bne x1, x2, BNE_WORKS
+001f8f93 // PC=0x1c line=13: addi x31, x31, 1 # Should never run!
+00100593 // PC=0x20 line=14: BNE_WORKS: addi x11, x0, 1
+00114463 // PC=0x24 line=15: blt x2, x1, BLT_WORKS
+001f8f93 // PC=0x28 line=16: addi x31, x31, 1 # Should never run!
+00100613 // PC=0x2c line=17: BLT_WORKS: addi x12, x0, 1
+00005463 // PC=0x30 line=18: bge x0, x0, BGE_WORKS
+001f8f93 // PC=0x34 line=19: addi x31, x31, 1 # Should never run!
+00100693 // PC=0x38 line=20: BGE_WORKS: addi x13, x0, 1
+0020e463 // PC=0x3c line=21: bltu x1, x2, BLTU_WORKS
+001f8f93 // PC=0x40 line=22: addi x31, x31, 1 # Should never run!
+00100713 // PC=0x44 line=23: BLTU_WORKS: addi x14, x0, 1
+00117463 // PC=0x48 line=24: bgeu x2, x1, BGEU_WORKS
+001f8f93 // PC=0x4c line=25: addi x31, x31, 1 # Should never run!
+00100793 // PC=0x50 line=26: BGEU_WORKS: addi x15, x0, 1
+00000063 // PC=0x54 line=27: INFINITE_LOOP: beq x0, x0, INFINITE_LOOP"""
+memh_bit = [BitArray("0x"+line.split(" ")[0],length=31) for line in memh_str_f.split("\n")]
+memh_dict = dict([(i*4,word) for i,word in enumerate(memh_bit)])

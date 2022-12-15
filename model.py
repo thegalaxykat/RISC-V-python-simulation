@@ -19,58 +19,61 @@ class Model(ABC):
     def __repr__(self):
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def get_pc(self):
-        pass
+        return None
 
-    @abstractmethod
     @property
+    @abstractmethod
     def get_registers(self):
-        pass
+        return None
 
     @abstractmethod
     def do_clock(self):
         pass
 
     @abstractmethod
-    def do_rst(self):
+    def do_reset(self):
         pass
 
 IMM_DICT = {
-    BitArray(0b0000011):[*range(20,32)], #   L
-    BitArray(0b0010011):[*range(20,32)], #   i
-    #BitArray(0b0010111):[self.] #   aui
-    BitArray(0b0100011):[*range(7,12),*range(25,32)], #   s
-    BitArray(0b0110011):[None], #none   r
+    BitArray('0b0000011',length=7).bin:[*range(-32,-20)], #   L                                 works
+    BitArray('0b0010011',length=7).bin:[*range(-32,-20)], #   i                                 works
+    BitArray('0b0100011',length=7).bin:[*range(-32,-25),*range(-12,-7)], #   s                   
+    BitArray('0b0110011',length=7).bin:[], #none   r                                            
+    BitArray('0b1100011',length=7).bin:[-32,-8,*range(-31,-25),*range(-12,-8),None], #   b            
+    BitArray('0b1100111',length=7).bin:[*range(-32,-20)], #   jalr                                works
+    BitArray('0b1101111',length=7).bin:[-32,*range(-20,-12),-21,*range(-31,-21),None], #   jal  
     #BitArray(0b0110111):[self.] #   lui
-    BitArray(0b1100011):[None,*range(8,12),*range(25,31),7,31], #   b
-    BitArray(0b1100111):[*range(20,32)], #   jalr
-    BitArray(0b1101111):[None,*range(25,31),24,*range(12,24),31], #   jal
+    #BitArray(0b0010111):[self.] #   aui
 }
 
-FUNCT3_BEQ  = BitArray(0b000)
-FUNCT3_BNE  = BitArray(0b001)
-FUNCT3_BLT  = BitArray(0b100)
-FUNCT3_BGE  = BitArray(0b101)
-FUNCT3_BLTU = BitArray(0b110)
-FUNCT3_BGEU = BitArray(0b111)
+FUNCT3_BEQ  = BitArray('0b000',length=3)
+FUNCT3_BNE  = BitArray('0b001',length=3)
+FUNCT3_BLT  = BitArray('0b100',length=3)
+FUNCT3_BGE  = BitArray('0b101',length=3)
+FUNCT3_BLTU = BitArray('0b110',length=3)
+FUNCT3_BGEU = BitArray('0b111',length=3)
+
+
 
 
 class MVP_Model(Model):
     def __init__(self,register_file) -> None:
-        super.__init__(self,register_file)
+        self._register_file = register_file
+        self._controller=None
         self._pc = None
         self.OP_DICT ={
-            BitArray(0b0000011):[self.memory_address,self.memory_read,self.memory_write_back], #   L
-            BitArray(0b0010011):[self.execute_i,self.alu_writeback], #   i
-            #BitArray(0b0010111):[self.] #   aui
-            BitArray(0b0100011):[self.memory_address,self.memory_write], #   s
-            BitArray(0b0110011):[self.execute_r,self.alu_writeback], #   r
-            #BitArray(0b0110111):[self.] #   lui
-            BitArray(0b1100011):[self.branch], #   b
-            BitArray(0b1100111):[self.jump_and_link_register,self.alu_writeback], #   jalr
-            BitArray(0b1101111):[self.jump_and_link,self.alu_writeback], #   jal
+            BitArray('0b0000011',length=7).bin:[self.memory_address,self.memory_read,self.memory_write_back], #   L
+            BitArray('0b0010011',length=7).bin:[self.execute_i,self.alu_writeback], #   i
+            BitArray('0b0100011',length=7).bin:[self.memory_address,self.memory_write], #   s
+            BitArray('0b0110011',length=7).bin:[self.execute_r,self.alu_writeback], #   r
+            BitArray('0b1100011',length=7).bin:[self.branch], #   b
+            BitArray('0b1100111',length=7).bin:[self.jump_and_link_register,self.alu_writeback], #   jalr
+            BitArray('0b1101111',length=7).bin:[self.jump_and_link,self.alu_writeback], #   jal
+            #BitArray(0b0110111,length=32):[self.] #   lui
+            #BitArray(0b0010111,length=32):[self.] #   aui
         }
         self._alu = self.ALU()
 
@@ -86,140 +89,191 @@ class MVP_Model(Model):
         return self._register_file
     
     def do_reset(self):
-        self._pc = BitArray(0x00000000)
+        self._pc = BitArray('0x00000000',length=32)
         #self._register_file.do_reset()
         pass
 
     def do_clock(self):
         #fetch
-        instruction = self._controller.get_instruct_mem(int(self._pc))
-        self._next_pc = self._pc + BitArray(int=4)
+        instruction = self._controller.get_instruct_mem(self._pc.int)
+        if instruction is None:
+            return
+        self._next_pc = BitArray(int = self._pc.uint + 4,length=32)
 
         #decode
-        op = instruction[6:0]
+        op = instruction[-7:]
         self.current_op = op
         self.current_instruction = instruction
+        self.rd = self.current_instruction[-12:-7]
+        self.rs1_addr = instruction[-20:-15]
+        self.rs2_addr = instruction[-25:-20]
         #rest of states
         memory = instruction
-        for func in self.OP_DICT[op]:
+
+        for func in self.OP_DICT[op.bin]:
             memory = func(memory)
-        pass
+        self._pc=self._next_pc
 
     def get_imm(self,instruction):
-        op = instruction[6:0]
-        order = IMM_DICT[op]
-        imm = [instruction[index] for index in order]
-        return imm
+        order = IMM_DICT[self.current_op.bin]
+        imm = [instruction[index] if index is not None else False for index in order]
+        b = BitArray(imm).int
+        return BitArray(int=b,length=32)
 
     def memory_address(self,instruction):
         imm = self.get_imm(instruction)
-        rs1_addr = instruction[19:15]
+        rs1_addr = instruction[-20:-15]
         rs1 = self._register_file.get_data(rs1_addr)
         addr = rs1+imm
         return addr # goes to memory write/read
 
     def memory_read(self,addr):
-        out = self._controller.get_data_mem(addr)
+        out = self._controller.get_data_mem(addr.uint)
         return out
 
     def memory_write_back(self,data):
-        rd = self.current_instruction[7:11]
+        rd = self.current_instruction[-12:-7]
         self._register_file.set_data(rd,data)
         return None
 
     def memory_write(self,addr):
-        rs2_addr = self.current_instruction[24:20]
+        rs2_addr = self.current_instruction[-25:-20]
         rs2 = self._register_file.get_data(rs2_addr)
-        self._controller.set_data_mem(addr,rs2)
+        self._controller.set_data_mem(addr.uint,rs2)
         return None
 
     def execute_i(self,instruction):
         imm = self.get_imm(instruction)
-        rs1_addr = instruction[19:15]
+        rs1_addr = instruction[-20:-15]
         rs1 = self._register_file.get_data(rs1_addr)
-        code = instruction[12:14]+instruction[30]
-        return self._alu(code,rs1,imm)
+        code = instruction[-15:-11] # workaround for some weird issues
+        if code.startswith('0b101') :
+            code[3] = instruction[-31]
+        else:
+            code[3] = False
+        return self._alu.calculate(code,rs1,imm)
 
     def execute_r(self,instruction):
-        rs1_addr = instruction[19:15]
+        rs1_addr = instruction[-20:-15]
         rs1 = self._register_file.get_data(rs1_addr)
-        rs2_addr = instruction[24:20]
+        rs2_addr = instruction[-25:-20]
         rs2 = self._register_file.get_data(rs2_addr)
-        code = instruction[12:15]+instruction[30]
-        return self._alu(code,rs1,rs2)
+        code = instruction[-15:-11]
+        code[3] = instruction[-31]
+        return self._alu.calculate(code,rs1,rs2)
 
     def branch(self,instruction):
         imm = self.get_imm(instruction)
-        rs1_addr = instruction[19:15]
+        rs1_addr = instruction[-20:-15]
         rs1 = self._register_file.get_data(rs1_addr)
-        rs2_addr = instruction[24:20]
+        rs2_addr = instruction[-25:-20]
         rs2 = self._register_file.get_data(rs2_addr)
         branch = False
-        match(instruction[12:14]):
-            case[FUNCT3_BEQ]:
-                branch = rs1 is rs2
-            case[FUNCT3_BGE]:
+        bcode = instruction[-15:-12]
+        match bcode.bin:
+            case FUNCT3_BEQ.bin:
+                branch = rs1 == rs2
+            case FUNCT3_BNE.bin:
+                branch = rs1 != rs2
+            case FUNCT3_BGE.bin:
                 branch = rs1.int>=rs2.int
-            case[FUNCT3_BGEU]:
-                branch = rs1.uint>=rs2.unit
-            case[FUNCT3_BLT]:
+            case FUNCT3_BGEU.bin:
+                a = rs1.uint
+                b = rs2.uint
+                branch = a>=b
+            case FUNCT3_BLT.bin:
                 branch = rs1.int<rs2.int
-            case[FUNCT3_BLTU]:
-                branch = rs1.uint<rs2.uint
+            case FUNCT3_BLTU.bin:
+                a = rs1.uint
+                b = rs2.uint
+                branch = a<b
         if branch:
-            self._next_pc = self._pc+imm
+            self._next_pc = BitArray(int = self._pc.int+imm.int,length=32)
         return None
 
     def jump_and_link_register(self,instruction):
         imm = self.get_imm(instruction)
-        rs1_addr = instruction[19:15]
+        rs1_addr = instruction[-20:-15]
         rs1 = self._register_file.get_data(rs1_addr)
         self._next_pc = BitArray(imm.int+rs1,length=32)
-        return self._pc + 4
+        return BitArray(int = self._pc.uint + 4,length=32)
 
     def alu_writeback(self,data):
-        rd = self.current_instruction[7:11]
+        rd = self.current_instruction[-12:-7]
         self._register_file.set_data(rd,data)
         return None
 
 
     def jump_and_link(self,instruction):
         imm = self.get_imm(instruction)
-        self._next_pc = BitArray(imm.int+self._pc,length=32)
-        return 
+        self._next_pc = BitArray(int=imm.int+self._pc.int,length=32)
+        #print(self._next_pc)
+        return BitArray(int = self._pc.uint + 4,length=32)
 
     class ALU():
 
         def __init__(self) -> None:
             pass
             self.alu_code_dict = {
-                BitArray('0b0000'):self.add,
-                BitArray('0b0001'):self.sub,
-                BitArray('0b0010'):self.sll,
-                BitArray('0b0100'):self.slt,
-                BitArray('0b0110'):self.sltu,
-                BitArray('0b1000'):self._xor,
-                BitArray('0b1010'):self.srl,
-                BitArray('0b1011'):self.sra,
-                BitArray('0b1100'):self._or,
-                BitArray('0b1110'):self._and,
+                '0000':self.add,
+                '0001':self.sub,
+                '0010':self.sll,
+                '0100':self.slt,
+                '0110':self.sltu,
+                '1000':self._xor,
+                '1010':self.srl,
+                '1011':self.sra,
+                '1100':self._or,
+                '1110':self._and,
             }
 
         def calculate(self,code,a,b):
-            return(self.alu_code_dict[code](a,b))
+            return(self.alu_code_dict[code.bin](a,b))
 
 
         def add(self,a,b):
-            return BitArray(int=int(a)+int(b),length=32)
+            try:
+                a = a.int
+            except AttributeError:
+                None
+            try:
+                b = b.int
+            except AttributeError:
+                None
+            return BitArray(int=a+b,length=32)
 
         def sub(self,a,b):
-            return BitArray(int=int(a)-int(b),length=32)
+            try:
+                a = a.int
+            except AttributeError:
+                None
+            try:
+                b = b.int
+            except AttributeError:
+                None
+            return BitArray(int= a-b,length=32)
 
         def slt(self,a,b):
-            return BitArray(int=int(a)<int(b),length=32)
+            try:
+                a = a.int
+            except AttributeError:
+                None
+            try:
+                b = b.int
+            except AttributeError:
+                None
+            return BitArray(int=a<b,length=32)
         
         def sltu(self,a,b):
-            return BitArray(int=a.uint<b.uint,length=32)
+            try:
+                a = a.uint
+            except AttributeError:
+                None
+            try:
+                b = b.uint
+            except AttributeError:
+                None
+            return BitArray(int=a<b,length=32)
 
         def _or(self,a,b):
             return a | b
@@ -231,10 +285,26 @@ class MVP_Model(Model):
             return a ^ b
         
         def sll(self,a,b):
-            return a.__lshift__(b.uint)
+            try:
+                a = a.uint
+            except AttributeError:
+                None
+            try:
+                b = b.uint
+            except AttributeError:
+                None
+            return BitArray(int=a<<b,length=32)
 
         def srl(self,a,b):
-            return a.__rshift__(b.uint)
+            try:
+                a = a.uint
+            except AttributeError:
+                None
+            try:
+                b = b.uint
+            except AttributeError:
+                None
+            return BitArray(int=a>>(b),length=32)
 
         def sra(self,a,b):
             return BitArray(int=a.int//b.uint,length=32)
