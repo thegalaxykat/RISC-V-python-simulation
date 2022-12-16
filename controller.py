@@ -48,6 +48,7 @@ class Controller:
             
             old_reg = None
             old_pc = None
+            # PC not changing and register file not changing
             while not(self.model.get_registers == old_reg) or not (old_pc == self.model.get_pc):
                 old_reg = self.model.get_registers
                 old_pc = self.model.get_pc
@@ -56,6 +57,7 @@ class Controller:
                 reg = self.model.get_registers
                 reg.fullreg = False
                 print(reg)
+                #todo we'll want to do this with view
             print(self.model)
 
 
@@ -68,6 +70,7 @@ class Controller:
             # send back to model at that PC
 
             # do_clock tells model to run
+
             pass
 
 
