@@ -44,23 +44,6 @@ class Controller:
 
         # line-by-line mode
         if filename == None:
-            self.instruction_memory=memh_dict
-            
-            old_reg = None
-            old_pc = None
-            # PC not changing and register file not changing
-            while not(self.model.get_registers == old_reg) or not (old_pc == self.model.get_pc):
-                old_reg = self.model.get_registers
-                old_pc = self.model.get_pc
-                print(self.model.get_pc)
-                self.model.do_clock()
-                reg = self.model.get_registers
-                reg.fullreg = False
-                print(reg)
-                #todo we'll want to do this with view
-            print(self.model)
-
-
             # get PC from model
 
             # get instruction line from user
@@ -83,10 +66,23 @@ class Controller:
             # create data and instruction memory
 
             # write instructions to instruction memory
-
+            self.instruction_memory=None#TODO FIXME lmao
             # run through each instruction
             
             # for instruction in instructions: self.model.do_clock()
+            old_reg = None
+            old_pc = None
+            # PC not changing and register file not changing
+            while not(self.model.get_registers == old_reg) or not (old_pc == self.model.get_pc):
+                old_reg = self.model.get_registers
+                old_pc = self.model.get_pc
+                print(self.model.get_pc)
+                self.model.do_clock()
+                reg = self.model.get_registers
+                reg.fullreg = False
+                print(reg)
+                #todo we'll want to do this with view
+            print(self.model)
             pass
 
         
