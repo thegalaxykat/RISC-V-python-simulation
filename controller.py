@@ -6,8 +6,8 @@ to the model to be executed. Stores instruction and data memory as dictionaries.
 import abc
 
 import bitstring
-from riscv_assembler.convert import AssemblyConverter as convertFile
-#from riscv_assembler.tools import AssemblyTools as convertLine
+from riscv_assembler.convert import AssemblyConverter
+from riscv_assembler.utils import *
 
 from model import Model
 from test_strings import memh_dict
@@ -48,7 +48,7 @@ class Controller:
             
             old_reg = None
             old_pc = None
-            
+            # PC not changing and register file not changing
             while not(self.model.get_registers == old_reg) or not (old_pc == self.model.get_pc):
                 old_reg = self.model.get_registers
                 old_pc = self.model.get_pc
@@ -57,6 +57,7 @@ class Controller:
                 reg = self.model.get_registers
                 reg.fullreg = False
                 print(reg)
+                #todo we'll want to do this with view
             print(self.model)
 
 
@@ -69,6 +70,7 @@ class Controller:
             # send back to model at that PC
 
             # do_clock tells model to run
+
             pass
 
 
