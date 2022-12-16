@@ -48,6 +48,7 @@ class Controller:
             
             old_reg = None
             old_pc = None
+            
             while not(self.model.get_registers == old_reg) or not (old_pc == self.model.get_pc):
                 old_reg = self.model.get_registers
                 old_pc = self.model.get_pc

@@ -1,7 +1,8 @@
 import bitstring
+from bitstring import BitArray
 
-bitstring.lsb0 = True
-BitArray = bitstring.BitArray
+#bitstring.lsb0 = True
+#BitArray = bitstring.BitArray
 
 memh_str_f = """00300113 // PC=0x0 line=10: addi sp, zero, 3
 01c11113 // PC=0x4 line=11: slli sp, sp, 28

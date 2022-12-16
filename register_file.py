@@ -132,10 +132,12 @@ class RegisterFile:
             lines.append(end_line)
             return "\n".join(lines)
         else:
-            self.modified_regs.sort()
-            for n in range(32):
-                raw_data = self.regfile[n].data
-                data = '{0:08X}'.format(raw_data)
+            #self.modified_regs.sort()
+            for n, reg in enumerate(self.regfile):
+                raw_data = reg.data
+                if raw_data is None:
+                    continue
+                data = raw_data.hex
                 reg_line = f"|{reg_index[n]} | {reg_names[n]} | {data}|"
                 lines.append(reg_line)
             lines.append(end_line)
