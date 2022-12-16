@@ -133,7 +133,7 @@ class RegisterFile:
             return "\n".join(lines)
         else:
             self.modified_regs.sort()
-            for n in self.modified_regs:
+            for n in range(32):
                 raw_data = self.regfile[n].data
                 data = '{0:08X}'.format(raw_data)
                 reg_line = f"|{reg_index[n]} | {reg_names[n]} | {data}|"

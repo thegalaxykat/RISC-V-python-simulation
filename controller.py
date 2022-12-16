@@ -53,6 +53,9 @@ class Controller:
                 old_pc = self.model.get_pc
                 print(self.model.get_pc)
                 self.model.do_clock()
+                reg = self.model.get_registers
+                reg.fullreg = False
+                print(reg)
             print(self.model)
 
 

@@ -113,6 +113,9 @@ class MVP_Model(Model):
         for func in self.OP_DICT[op.bin]:
             memory = func(memory)
         self._pc=self._next_pc
+    
+    def clock_string(self):
+        pass
 
     def get_imm(self,instruction):
         order = IMM_DICT[self.current_op.bin]
