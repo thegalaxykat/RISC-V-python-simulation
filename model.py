@@ -49,8 +49,8 @@ IMM_DICT = {
     BitArray('0b1100011',length=7).bin:[-32,-8,*range(-31,-25),*range(-12,-8),None], #   b            
     BitArray('0b1100111',length=7).bin:[*range(-32,-20)], #   jalr                                works
     BitArray('0b1101111',length=7).bin:[-32,*range(-20,-12),-21,*range(-31,-21),None], #   jal  
-    #BitArray(0b0110111):[self.] #   lui
-    #BitArray(0b0010111):[self.] #   aui
+    BitArray('0b0110111',length=7).bin:[*range(-32,-12),None,None,None,None,None,None,None,None,None,None,None,None], #   lui
+    BitArray('0b0010111',length=7).bin:[*range(-32,-12),None,None,None,None,None,None,None,None,None,None,None,None] #   aui
 }
 
 #this is the funct3 codes functions for the branch match case
@@ -78,8 +78,8 @@ class MVP_Model(Model):
             BitArray('0b1100011',length=7).bin:'b type',#[self.branch], #   b
             BitArray('0b1100111',length=7).bin:'jr type',#[self.jump_and_link_register,self.alu_writeback], #   jalr
             BitArray('0b1101111',length=7).bin:'jal type',#[self.jump_and_link,self.alu_writeback], #   jal
-            #BitArray(0b0110111,length=32).bin:[self.] #   lui  unused
-            #BitArray(0b0010111,length=32).bin:[self.] #   aui  unused
+            BitArray('0b0110111',length=7).bin:'lui type',#   lui
+            BitArray('0b0010111',length=7).bin:'aui type',#   aui
         }
         self._alu = self.ALU(self) # init alu class
         self._fsm_state = None
@@ -126,6 +126,7 @@ class MVP_Model(Model):
         """ run a clock cycle of the processor 
         inputs : none
         outputs : none"""
+        print(self._pc)
         print(self._fsm_state)
         if self._pc.int >= 0x0e4:
             None
@@ -200,7 +201,7 @@ class MVP_Model(Model):
                 self.next_fsm_state = 'alu writeback'
             case 'Jump and link register':
                 self.jump_and_link_register()
-                self.next_fsm_state = 'alu writeback'
+                self.next_fsm_state = 'jalr writeback'
             case 'Jump and link':
                 self.jump_and_link()
                 self.next_fsm_state = 'alu writeback'
@@ -208,9 +209,21 @@ class MVP_Model(Model):
                 self._PC_write = False
                 self.alu_writeback()
                 self.next_fsm_state = 'Fetch'
+            case 'jalr writeback':
+                self._PC_write = False
+                self.jalr_writeback()
+                self.next_fsm_state = 'Fetch'
             case 'Branch':
                 self.branch()
                 self.next_fsm_state = 'Fetch'
+            case 'Add Upper Immediate to PC':
+                self.execute_aui()
+                self.next_fsm_state = "Fetch"
+            case 'Load Upper Immediate':
+                self._write_to_register = True
+                self._result_slt = 'imm'
+                self.next_fsm_state = 'Fetch'
+
             
         
         if self._write_mem:
@@ -222,7 +235,10 @@ class MVP_Model(Model):
         _result = self._result
         _pc = self._pc
         _data_addr = self._addr 
-        instruction = self._controller.get_instruct_mem((self._addr).uint)
+
+        #work around for having not just instruction ram but data ram too
+        #instruction = self._controller.get_instruct_mem((self._addr).uint)
+        instruction = self._controller.get_instruct_mem((self._pc).uint)
 
         self.rs1_addr = self._current_instruction[-20:-15]
         self.rs2_addr = self._current_instruction[-25:-20]
@@ -275,6 +291,8 @@ class MVP_Model(Model):
                 return self._alu_result
             case 'memory_result':
                 return self._memory_result
+            case 'imm':
+                return self._imm
         return None
     
     @property
@@ -375,6 +393,13 @@ class MVP_Model(Model):
         self._alu_control = code.bin
         pass
 
+    def execute_aui(self):
+        self._alu_a_slt = 'pc'
+        self._alu_b_slt = 'imm'
+        self._alu_control = 'add'
+        self._result_slt = "alu_result"
+        self._write_to_register = True
+
     def branch(self):
         rs1 = self.rs1_data
         rs2 = self.rs2_data
@@ -404,17 +429,28 @@ class MVP_Model(Model):
 
     def jump_and_link_register(self):
         self._PC_write = True
-        self._result_slt = "alu_result"
-        self._alu_a_slt = "old pc"
-        self._alu_b_slt = "4"
+        self._alu_a_slt = "rs1"
+        self._alu_b_slt = "imm"
         self._alu_control = 'add'
+        self._result_slt = "alu_result"
+        
         return None
 
     def alu_writeback(self): # write the data from the alu
+        self._PC_write = False
         self._result_slt = "alu_result_old"
         self._write_to_register=True
         return None
 
+    def jalr_writeback(self): # write the data from the alu
+        self._PC_write = False
+        self._alu_a_slt = "old pc"
+        self._alu_b_slt = "4"
+        self._alu_control = 'add'
+        self._result_slt = "alu_result"
+        self._write_to_register=True
+        self.next_fsm_state = "Fetch"
+        return None
 
     def jump_and_link(self):
         self._PC_write = True
