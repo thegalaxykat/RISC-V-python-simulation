@@ -4,17 +4,13 @@ Joseph Gilbert, Kat Canavan, and Arturo Joya
 
 This repository contains the files used to create a command-line based simulation of a RISC-V CPU using Python. Both a debugging and educational tool, this program takes assembly as input and returns the register files after each instruction. Note that store/load half and byte instructions are not supported.
 
+For the conversion from assembly to binary we've slightly modified some course material, `assembler.py` from Avinash Nonholonomy's Olin Computer Architecture course material ([GitHub]([GitHub - avinash-nonholonomy/olin-cafe-f22: Repository for Olin's ENGR3410 - Fall 2022](https://github.com/avinash-nonholonomy/olin-cafe-f22))). Thanks Avinash!
+
 ## Dependencies
 
 This simulation was run and tested using Python 3.10. Prior versions of Python are not compatible.
 
-The following libraries were used:
-
-- bitstring 
-
-- riscv-assembler ([GitHub](https://github.com/kcelebi/riscv-assembler))
-
-All libraries can be installed with
+Only one library that needs to be installed is bitstring which can either be installed with `pip install bitstring` or
 
 ```bash
 pip install -r requirements.txt
