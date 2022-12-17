@@ -2,7 +2,9 @@
 RISC-V Single Cycle CPU
 """
 from abc import ABC, abstractmethod
-
+import bitstring
+bitstring.lsb0 = True
+BitArray = bitstring.BitArray
 
 class CPUView(ABC):
     """
@@ -38,9 +40,11 @@ class TextView(CPUView):
 
     def draw(self):
         """
-        Prints the CPUs state. Specifically it will print out the non
-        xxxxxxxx registers. If verbose, will print out the entire
-        register file.
+        Prints the CPUs register file state. Specifically it will
+        print out the non xxxxxxxx registers. If verbose, will print
+        out the entire register file. It will also print out the
+        pointer counter to help ensure that
         """
+        print(f"Intruction : {self.cpu.instruction.hex}")
+        print(f"PC : {self.cpu.pc.hex}")
         print(self.cpu)
-        print(f"Please enter a new instruction")
