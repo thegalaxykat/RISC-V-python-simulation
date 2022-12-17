@@ -240,7 +240,8 @@ class MVP_Model(Model):
 
         #work around for having not just instruction ram but data ram too
         #instruction = self._controller.get_instruct_mem((self._addr).uint)
-        instruction = self._controller.get_instruct_mem((self._pc).uint)
+        if self._IR_write:
+            instruction = self._controller.get_instruct_mem((self._pc).uint)
 
         self.rs1_addr = self._current_instruction[-20:-15]
         self.rs2_addr = self._current_instruction[-25:-20]

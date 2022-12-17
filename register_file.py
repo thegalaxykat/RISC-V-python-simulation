@@ -116,7 +116,7 @@ class RegisterFile:
         if (self.fullreg == True):
             for l in range(32):
                 raw_data = self.regfile[l].data
-                if (raw_data is None):
+                if (raw_data == None):
                     data = "xxxxxxxx"
                 else:
                     data = raw_data.hex#'{0:08X}'.format(raw_data.int)
@@ -135,7 +135,7 @@ class RegisterFile:
             #self.modified_regs.sort()
             for n, reg in enumerate(self.regfile):
                 raw_data = reg.data
-                if raw_data is None:
+                if raw_data == None:
                     continue
                 data = raw_data.hex
                 reg_line = f"|{reg_index[n]} | {reg_names[n]} | {data}|"

@@ -2,7 +2,7 @@
 Controller for the RISC-V simulator. Gets assembly from user and passes binary 
 to the model to be executed. Stores instruction and data memory as dictionaries.
 """
-
+import os
 from abc import ABC, abstractmethod
 
 import bitstring
@@ -25,7 +25,7 @@ class Controller:
         model.set_controller(self)
         self.model = model
         self.view = view
-
+        self.prompt = PromptCLI
         # reset model
         self.model.do_reset()
 
@@ -35,6 +35,7 @@ class Controller:
 
         # conversion toolkit object for later
         self.tk = Toolkit()
+        self._at_end_of_mem = False
 
     def run(self, filename=None):
         """
@@ -48,26 +49,33 @@ class Controller:
 
         # line-by-line mode
         if filename == None:
-            # get instruction line from user
-            instruction = PromptCLI.get_instruction()
-            instruction.lower()
-            instruction = instruction.replace(',', '')
-            # compile assembly to binary (bitstring)
-            bin_instruct_str = self.compile_line_instruct(instruction)
-            binary = bitstring.BitArray('0b'+bin_instruct_str)
-            # update instruction memory
-            self.instruction_memory.update({pc: binary})
-            # do_clock tells model to run
-            self.model.do_instruction()
+            while 1:
+                # get instruction line from user
+                instruction = self.prompt.get_instruction()
+                instruction.lower()
+                instruction = instruction.replace(',', '')
+                if 'stop' in instruction or 'escape' in instruction:
+                    print(self.model)
+                    return
+                # compile assembly to binary (bitstring)
+                bin_instruct_str = self.compile_line_instruct(instruction)
+                binary = bitstring.BitArray('0b'+bin_instruct_str)
+                # update instruction memory
+                self.instruction_memory[self.model.get_pc.uint] = binary
+                # do_clock tells model to run
+                self.model.do_instruction()
 
         # Assembly *file* mode
         else:
             # compile assembly
-            cnv = AssemblyConverter(output_type="t", nibble=False)
-            cnv.convert('/binary/instructions.txt')
+            cnv = AssemblyConverter(output_type="t", nibble=False,hexMode=False)
+            if os.path.exists(os.path.join(os.path.curdir,filename.replace('.s','')+'/txt/')):
+                os.remove(os.path.join(os.path.curdir,filename.replace('.s','')+'/txt/'+filename.replace('.s','.txt')))
+                os.rmdir(os.path.join(os.path.curdir,filename.replace('.s','')+'/txt/'))
+            cnv.convert(os.path.join(os.path.curdir,filename))
 
             # for each line (instruction) in file add to instruction memory
-            with open('/binary/instructions.txt', 'r') as f:
+            with open(filename.replace('.s','')+'/txt/'+filename.replace('.s','.txt'), 'r') as f:
                 for line in f:
                     # str to bitstring
                     instruction = bitstring.BitArray(bin=line)
@@ -81,14 +89,15 @@ class Controller:
             old_pc = None
             # (while PC not changing and register file not changing)
             while not (self.model.get_registers == old_reg) or \
-                    not (old_pc == self.model.get_pc):
+                    not (old_pc == self.model.get_pc) and not self._at_end_of_mem:
 
                 old_reg = self.model.get_registers
                 old_pc = self.model.get_pc
 
-                self.model.do_clock()
+                self.model.do_instruction()
                 reg = self.model.get_registers
                 reg.fullreg = False
+            print(self.model.get_registers)
 
     def reg_number(self, reg):
         """
@@ -178,6 +187,7 @@ class Controller:
         # throws error if trying to access mem that doesn't exist
         else:
             print("no more instruction mem")
+            self._at_end_of_mem = True
             return None
 
     def get_data_mem(self, address):
@@ -249,3 +259,21 @@ class PromptCLI(Prompt):
     def get_file():
         filename = input('Enter file name: ')
         return filename
+
+class PromptEmulation(Prompt):
+    def __init__(self):
+        self.possible_instructions = []
+
+    def get_instruction():
+        instruct = input('Enter instruction: ')
+        # if branch or jump reject
+        while instruct[0] == 'b' or instruct[0] == 'j':
+            print("Only I Types, R Types, and S Types supported in \
+                 line-by-line mode")
+            instruct = PromptCLI.retry_instruction()
+        return instruct
+
+    def get_file():
+        filename = input('Enter file name: ')
+        return filename
+
