@@ -2,9 +2,12 @@
 RISC-V Single Cycle CPU
 """
 from abc import ABC, abstractmethod
+
 import bitstring
+
 bitstring.lsb0 = True
 BitArray = bitstring.BitArray
+
 
 class CPUView(ABC):
     """
