@@ -2,7 +2,7 @@
 
 Joseph Gilbert, Kat Canavan, and Arturo Joya
 
-This repository contains the files used to create a command-line based simulation of a RISC-V CPU using Python. Both a debugging and educational tool, this program takes assembly as input and returns the register files after each instruction.
+This repository contains the files used to create a command-line based simulation of a RISC-V CPU using Python. Both a debugging and educational tool, this program takes assembly as input and returns the register files after each instruction. Note that store/load half and byte instructions are not supported.
 
 ## Dependencies
 
@@ -26,9 +26,9 @@ This program requires the user to be at least somewhat familiar with command lin
 
 There are two methods of inputting RISC-V assembly code:
 
-1. Enter instructions line-by-line, live, through the terminal and immediately see the result of each given command. Since this is live, only I Type, R Type, and S Type instructions are supported.
+1. Enter instructions line-by-line, live, through the terminal and immediately see the result of each given command. Since this is live, only I Type, R Type, and store word instructions are supported.
 
-2. Process an entire assembly (.s) file. All instructions are processed and when the program is complete the relevant registers are displayed per step. This mode supports all RISC-V 32I instructions. 
+2. Process an entire assembly (.s) file. All instructions are processed and when the program is complete the relevant registers are displayed per step. This mode supports all RISC-V 32I instructions except those involving halfs and bytes. 
 
 Each of these methods are described in more detail below.
 
