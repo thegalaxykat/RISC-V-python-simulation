@@ -57,9 +57,8 @@ class Controller:
             binary = bitstring.BitArray('0b'+bin_instruct_str)
             # update instruction memory
             self.instruction_memory.update({pc: binary})
-            print(self.instruction_memory)
             # do_clock tells model to run
-            self.model.do_clock()
+            self.model.do_instruction()
 
         # Assembly *file* mode
         else:
