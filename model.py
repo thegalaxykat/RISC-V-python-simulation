@@ -71,13 +71,13 @@ class MVP_Model(Model):
         self._controller=None
         self._pc = None # the ps is set to none b/c it needs to be reset first like the real model
         self.OP_DICT ={ # this shows the track for every path through the fsm (this only stores after the decode state)
-            BitArray('0b0000011',length=7).bin:'l type',#['MemAdr',self.memory_read,self.memory_write_back], #   L
-            BitArray('0b0010011',length=7).bin:'i type',#[self.execute_i,self.alu_writeback], #   i
-            BitArray('0b0100011',length=7).bin:'s type',#['MemAdr',self.memory_write], #   s
-            BitArray('0b0110011',length=7).bin:'r type',#[self.execute_r,self.alu_writeback], #   r
-            BitArray('0b1100011',length=7).bin:'b type',#[self.branch], #   b
-            BitArray('0b1100111',length=7).bin:'jr type',#[self.jump_and_link_register,self.alu_writeback], #   jalr
-            BitArray('0b1101111',length=7).bin:'jal type',#[self.jump_and_link,self.alu_writeback], #   jal
+            BitArray('0b0000011',length=7).bin:'l type',  #   L
+            BitArray('0b0010011',length=7).bin:'i type',  #   i
+            BitArray('0b0100011',length=7).bin:'s type',  #   s
+            BitArray('0b0110011',length=7).bin:'r type',  #   r
+            BitArray('0b1100011',length=7).bin:'b type',  #   b
+            BitArray('0b1100111',length=7).bin:'jr type', #   jalr
+            BitArray('0b1101111',length=7).bin:'jal type',#   jal
             BitArray('0b0110111',length=7).bin:'lui type',#   lui
             BitArray('0b0010111',length=7).bin:'aui type',#   aui
         }
@@ -100,6 +100,7 @@ class MVP_Model(Model):
         return self._register_file
     
     def do_reset(self):
+        """this is the reset button"""
         self._fsm_state = 'Fetch'
         self._pc = BitArray('0x00000000',length=32) # resets the pc counter to 0
         self._data_mem_adr= BitArray('0x00000000',length=32)
@@ -115,6 +116,8 @@ class MVP_Model(Model):
         pass
 
     def do_instruction(self):
+        """runs do clock until the next instruction is complete
+        it will run until just before the next fetch state"""
         if(self._fsm_state == 'Fetch'):
             self.do_clock()
         while self._fsm_state != 'Fetch':
@@ -128,8 +131,6 @@ class MVP_Model(Model):
         outputs : none"""
         print(self._pc)
         print(self._fsm_state)
-        if self._pc.int >= 0x0e4:
-            None
         match(self._fsm_state):
             case 'Fetch':
                 #fetch
@@ -225,12 +226,13 @@ class MVP_Model(Model):
                 self.next_fsm_state = 'Fetch'
 
             
-        
+        #only write to data mem if needed
         if self._write_mem:
             self._controller.set_data_mem((self._addr).uint,self.rs2_data)
+
+
         #the reason we need 2 steps here is b/c python is serial and real logic is parallel
-        if self._pc.int > 0x0e4:
-            None
+
         #registers data collection
         _result = self._result
         _pc = self._pc
@@ -265,18 +267,24 @@ class MVP_Model(Model):
         self._alu_result_old = alu_result
         self._fsm_state = self.next_fsm_state
         return 1 # flag for good
-    #work around for only calling data me when its needed so as not to raise an error
+
+    # how we are doing combonational logic is using properties with the datapath inside them TODO: BETTER WORDING
+
+    #work around for only calling data mem when its needed so as not to raise an error
     @property
     def _memory_result(self):
+        """this the this output of the data memory when called"""
         return self._controller.get_data_mem(self._data_mem_adr.uint)
 
     @property
     def rd(self):
+        """this the rd value of the current instruction"""
         return self._current_instruction[-12:-7]
     
     ######################## alu ########################
     @property
     def _alu_result(self):
+        """this calls the alu class and plugs in the right info from the a and b muxes"""
         if self._alu_a == None or self._alu_b == None:
             None
         return self._alu.calculate(self._alu_control,self._alu_a,self._alu_b)
@@ -284,6 +292,13 @@ class MVP_Model(Model):
     ####################### muxes #######################
     @property
     def _result(self):
+        """this is the result mux
+        its value is set by self._result_slt
+        and it can have values of:
+        alu_result_old
+        alu_result
+        memory_result
+        imm"""
         match(self._result_slt):
             case 'alu_result_old':
                 return self._alu_result_old
@@ -291,12 +306,13 @@ class MVP_Model(Model):
                 return self._alu_result
             case 'memory_result':
                 return self._memory_result
-            case 'imm':
-                return self._imm
+            case 'imm':# this was added for the lui types as a workaround for some last minute bugs
+                return self._imm 
         return None
     
     @property
     def _alu_a(self):
+        """this is the alu a mux"""
         match(self._alu_a_slt):
             case 'pc':
                 return self._pc
@@ -308,6 +324,7 @@ class MVP_Model(Model):
 
     @property
     def _alu_b(self):
+        """this is the alu b mux"""
         match(self._alu_b_slt):
             case 'imm'|'immediate':
                 return self._imm
@@ -319,13 +336,12 @@ class MVP_Model(Model):
     
     @property
     def _addr(self):
+        """this is the addr mux
+        if self._addr_slt: it returns the _result mux
+        otherwise its the _pc reg"""
         if self._addr_slt:
             return self._result
         return self._pc
-    
-
-    def clock_string(self):
-        pass
 
 
     def wire_states(self):
