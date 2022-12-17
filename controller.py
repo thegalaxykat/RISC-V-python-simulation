@@ -62,10 +62,9 @@ class Controller:
         else:
             # compile assembly
             self.ap
-            with open(os.path.join(os.path.curdir,filename), "r") as f:
+            with open(os.path.join(os.path.curdir, filename), "r") as f:
                 for line in f:
                     self.ap.parse_line(line)
-            
 
             self.instruction_memory = self.ap.return_mem()
 
@@ -116,15 +115,14 @@ class Controller:
             bitstring: binary instruction
         """
         # comma formatting (Avi's code requires them)
-        instruct = instruct.replace(' ',', ')
-        instruct = instruct.replace(',,',',')
-        instruct = instruct.replace(', ',' ',1)
+        instruct = instruct.replace(' ', ', ')
+        instruct = instruct.replace(',,', ',')
+        instruct = instruct.replace(', ', ' ', 1)
         # PC is stored in model (as bitArray)
         pc = self.model.get_pc.uint
         # parse line and return binary instruction
         line = self.ap.parse_line(instruct)
-        return self.ap.return_line(line,pc)
-
+        return self.ap.return_line(line, pc)
 
     def get_instruct_mem(self, address):
         """
@@ -212,10 +210,12 @@ class PromptCLI(Prompt):
         filename = input('Enter file name: ')
         return filename
 
+
 class PromptEmulation(Prompt):
     """
     Gets assembly from test
     """
+
     def __init__(self):
         self.possible_instructions = []
 
@@ -231,4 +231,3 @@ class PromptEmulation(Prompt):
     def get_file():
         filename = input('Enter file name: ')
         return filename
-
