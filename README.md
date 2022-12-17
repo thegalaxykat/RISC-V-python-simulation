@@ -12,7 +12,7 @@ The following libraries were used:
 
 - bitstring 
 
-- riscv-assembler ([GitHub](https://github.com/kcelebi/riscv-assembler)), ([Documentation](https://github.com/kcelebi/riscv-assembler))
+- riscv-assembler ([GitHub](https://github.com/kcelebi/riscv-assembler))
 
 All libraries can be installed with
 
