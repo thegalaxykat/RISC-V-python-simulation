@@ -41,7 +41,7 @@ class Model(ABC):
         pass
 
 
-# the imm value is stored in different ways depending on the instruction, this 
+# the imm value is stored in different ways depending on the instruction, this
 # just standardizes it. None represents 0 and an empty list represents no imm.
 # MSB is a index 0 so the list is reversed
 IMM_DICT = {
