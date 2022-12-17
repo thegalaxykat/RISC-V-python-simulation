@@ -1,2 +1,3 @@
 bitstring==3.1.7
-riscv-assembler
+#riscv-assembler # has bug with branch 
+git+https://github.com/KaetaXpog/riscv-assembler.git@main

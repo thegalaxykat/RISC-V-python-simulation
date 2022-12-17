@@ -7,8 +7,7 @@ from abc import ABC, abstractmethod
 
 import bitstring
 # note that Convert works for whole files and Tools works for individual lines
-from riscv_assembler.convert import AssemblyConverter
-from riscv_assembler.utils import *
+from assembler import AssemblyProgram
 
 from model import Model
 
@@ -34,7 +33,7 @@ class Controller:
         self.data_memory = {}
 
         # conversion toolkit object for later
-        self.tk = Toolkit()
+        #self.tk = Toolkit()
         self._at_end_of_mem = False
 
     def run(self, filename=None):
@@ -43,9 +42,8 @@ class Controller:
         .s file), compiles it to binary, writes to instruction memory, and
         runs the model.
         """
-
+        self.ap = AssemblyProgram()
         # get PC from model (begins at 0)
-        pc = self.model.get_pc.uint
 
         # line-by-line mode
         if filename == None:
@@ -58,8 +56,7 @@ class Controller:
                     print(self.model)
                     return
                 # compile assembly to binary (bitstring)
-                bin_instruct_str = self.compile_line_instruct(instruction)
-                binary = bitstring.BitArray('0b'+bin_instruct_str)
+                binary = self.compile_line_instruct(instruction)
                 # update instruction memory
                 self.instruction_memory[self.model.get_pc.uint] = binary
                 # do_clock tells model to run
@@ -68,21 +65,13 @@ class Controller:
         # Assembly *file* mode
         else:
             # compile assembly
-            cnv = AssemblyConverter(output_type="t", nibble=False,hexMode=False)
-            if os.path.exists(os.path.join(os.path.curdir,filename.replace('.s','')+'/txt/')):
-                os.remove(os.path.join(os.path.curdir,filename.replace('.s','')+'/txt/'+filename.replace('.s','.txt')))
-                os.rmdir(os.path.join(os.path.curdir,filename.replace('.s','')+'/txt/'))
-            cnv.convert(os.path.join(os.path.curdir,filename))
-
-            # for each line (instruction) in file add to instruction memory
-            with open(filename.replace('.s','')+'/txt/'+filename.replace('.s','.txt'), 'r') as f:
+            self.ap
+            with open(os.path.join(os.path.curdir,filename), "r") as f:
                 for line in f:
-                    # str to bitstring
-                    instruction = bitstring.BitArray(bin=line)
-                    # add to instruction memory at pc (dictionary of bit arrays)
-                    self.instruction_memory[pc] = instruction
-                    # finally, for next instruction, increment PC by 4
-                    pc += 4
+                    self.ap.parse_line(line)
+            
+
+            self.instruction_memory = self.ap.return_mem()
 
             # run through each instruction
             old_reg = None
@@ -131,6 +120,8 @@ class Controller:
         Returns:
             bitstring: binary instruction
         """
+
+        """
         # R type instruct
         r_types = ['add', 'sub', 'sll', 'slt',
                    'sltu', 'xor', 'srl', 'sra', 'or', 'and']
@@ -148,7 +139,7 @@ class Controller:
             rs1 = instruct.split()[2].replace(',', '')
             rs2 = instruct.split()[3]
             # toolkit requires special format
-            return self.tk.R_type(operation, self.reg_number(rs1), self.reg_number(rs2), self.reg_number(rd))
+            #return self.tk.R_type(operation, self.reg_number(rs1), self.reg_number(rs2), self.reg_number(rd))
 
         elif instruct.split()[0] in i_types_op3:
             operation = instruct.split()[0]
@@ -156,7 +147,7 @@ class Controller:
             imm = instruct.split()[2].split('(')[0].replace(',', '')
             rs1 = instruct.split()[2].split('(')[1].replace(')', '')
             # toolkit requires special format, again
-            return self.tk.I_type(operation, self.reg_number(rs1), int(imm), self.reg_number(rd))
+            #return self.tk.I_type(operation, self.reg_number(rs1), int(imm), self.reg_number(rd))
 
         elif instruct.split()[0] in i_types_op19:
             operation = instruct.split()[0]
@@ -164,7 +155,7 @@ class Controller:
             rs1 = instruct.split()[2].replace(',', '')
             imm = instruct.split()[3]
             # toolkit requires special format
-            return self.tk.I_type(operation, self.reg_number(rs1), (imm), self.reg_number(rd))
+            #return self.tk.I_type(operation, self.reg_number(rs1), (imm), self.reg_number(rd))
 
         elif instruct.split()[0] in s_types:
             operation = instruct.split()[0]
@@ -172,7 +163,14 @@ class Controller:
             imm = instruct.split()[2].split('(')[0].replace(',', '')
             rs1 = instruct.split()[2].split('(')[1].replace(')', '')
             # toolkit still requires a special format
-            return self.tk.S_type(operation, self.reg_number(rs1), self.reg_number(rs2), imm)
+            #return self.tk.S_type(operation, self.reg_number(rs1), self.reg_number(rs2), imm)#"""
+        instruct = instruct.replace(' ',', ')
+        instruct = instruct.replace(',,',',')
+        instruct = instruct.replace(', ',' ',1)
+        pc = self.model.get_pc.uint
+        line = self.ap.parse_line(instruct)
+        return self.ap.return_line(line,pc)
+
 
     def get_instruct_mem(self, address):
         """
