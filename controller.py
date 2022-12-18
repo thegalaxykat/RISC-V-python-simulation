@@ -5,10 +5,7 @@ to the model to be executed. Stores instruction and data memory as dictionaries.
 import os
 from abc import ABC, abstractmethod
 
-import bitstring
-# note that Convert works for whole files and Tools works for individual lines
 from assembler import AssemblyProgram
-
 from model import Model
 
 
@@ -33,7 +30,6 @@ class Controller:
         self.data_memory = {}
 
         # conversion toolkit object for later
-        #self.tk = Toolkit()
         self._at_end_of_mem = False
 
     def run(self, filename=None):
@@ -70,10 +66,9 @@ class Controller:
         else:
             # compile assembly
             self.ap
-            with open(os.path.join(os.path.curdir,filename), "r") as f:
+            with open(os.path.join(os.path.curdir, filename), "r") as f:
                 for line in f:
                     self.ap.parse_line(line)
-            
 
             self.instruction_memory = self.ap.return_mem()
 
@@ -115,8 +110,7 @@ class Controller:
 
     def compile_line_instruct(self, instruct):
         """
-        Compiles line of assembly to binary but first must determine the
-        instruction type to use the correct function from the toolkit.
+        Compiles line of assembly to binary
 
         Args:
             instruct (str): line of assembly
@@ -124,57 +118,15 @@ class Controller:
         Returns:
             bitstring: binary instruction
         """
-
-        """
-        # R type instruct
-        r_types = ['add', 'sub', 'sll', 'slt',
-                   'sltu', 'xor', 'srl', 'sra', 'or', 'and']
-        # I type instruct
-        i_types_op3 = ['lb', 'lh', 'lw', 'lbu', 'lhu']
-        i_types_op19 = ['addi', 'slli', 'sltu', 'sltiu', 'xori', 'srli', 'srai',
-                        'ori', 'andi']
-        # S type instruct
-        s_types = ['sb', 'sh', 'sw']
-
-        # compile to binary with toolkit
-        if instruct.split()[0] in r_types:
-            operation = instruct.split()[0]
-            rd = instruct.split()[1].replace(',', '')
-            rs1 = instruct.split()[2].replace(',', '')
-            rs2 = instruct.split()[3]
-            # toolkit requires special format
-            #return self.tk.R_type(operation, self.reg_number(rs1), self.reg_number(rs2), self.reg_number(rd))
-
-        elif instruct.split()[0] in i_types_op3:
-            operation = instruct.split()[0]
-            rd = instruct.split()[1].replace(',', '')
-            imm = instruct.split()[2].split('(')[0].replace(',', '')
-            rs1 = instruct.split()[2].split('(')[1].replace(')', '')
-            # toolkit requires special format, again
-            #return self.tk.I_type(operation, self.reg_number(rs1), int(imm), self.reg_number(rd))
-
-        elif instruct.split()[0] in i_types_op19:
-            operation = instruct.split()[0]
-            rd = instruct.split()[1].replace(',', '')
-            rs1 = instruct.split()[2].replace(',', '')
-            imm = instruct.split()[3]
-            # toolkit requires special format
-            #return self.tk.I_type(operation, self.reg_number(rs1), (imm), self.reg_number(rd))
-
-        elif instruct.split()[0] in s_types:
-            operation = instruct.split()[0]
-            rs2 = instruct.split()[1].replace(',', '')
-            imm = instruct.split()[2].split('(')[0].replace(',', '')
-            rs1 = instruct.split()[2].split('(')[1].replace(')', '')
-            # toolkit still requires a special format
-            #return self.tk.S_type(operation, self.reg_number(rs1), self.reg_number(rs2), imm)#"""
-        instruct = instruct.replace(' ',', ')
-        instruct = instruct.replace(',,',',')
-        instruct = instruct.replace(', ',' ',1)
+        # comma formatting (Avi's code requires them)
+        instruct = instruct.replace(' ', ', ')
+        instruct = instruct.replace(',,', ',')
+        instruct = instruct.replace(', ', ' ', 1)
+        # PC is stored in model (as bitArray)
         pc = self.model.get_pc.uint
+        # parse line and return binary instruction
         line = self.ap.parse_line(instruct)
-        return self.ap.return_line(line,pc)
-
+        return self.ap.return_line(line, pc)
 
     def get_instruct_mem(self, address):
         """
@@ -242,7 +194,7 @@ class Prompt(ABC):
 
 class PromptCLI(Prompt):
     """
-    Gets file from user in CLI
+    Gets assembly from user in CLI
     """
 
     def get_instruction():
