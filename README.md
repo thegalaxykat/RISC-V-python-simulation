@@ -76,3 +76,7 @@ We decided to implement this simulation using object oriented design. We followe
 ![MCV Diagram](MVC.png)
 
 Please read through the comments on our code and function docstrings for more information on precisely how the it works.
+
+
+### Tests
+Test cases with randomly generated instruction were used to test the system. The code behind these tests can be found in `test_single_line.py`, although it should be noted that the tests will be different each time.
