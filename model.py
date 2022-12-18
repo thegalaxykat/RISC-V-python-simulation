@@ -201,8 +201,10 @@ class MVP_Model(Model):
                         self._alu_a_slt = 'old pc'
                         self._alu_b_slt = 'imm'
                         self._alu_control = 'add'
-                    case []:
-                        None
+                    case 'lui type':
+                        self.next_fsm_state = 'Load Upper Immediate'
+                    case 'aui type':
+                        self.next_fsm_state= 'Add Upper Immediate to PC'
 
             # Memory address state
             case 'MemAdr':
@@ -645,14 +647,14 @@ class MVP_Model(Model):
             Shifts a left (logical) by b bits.
             """
             try:
-                a = a.uint
+                a = BitArray(a)
             except AttributeError:
                 None
             try:
                 b = b.uint
             except AttributeError:
                 None
-            return BitArray(int=a << b, length=32)
+            return a.__ilshift__(b)
 
         def srl(self, a, b):
             """
@@ -672,4 +674,4 @@ class MVP_Model(Model):
             """
             Shifts a right arithmetic by b bits.
             """
-            return BitArray(int=a.int//b.uint, length=32)
+            return BitArray(int=a.int//2**b.uint, length=32)

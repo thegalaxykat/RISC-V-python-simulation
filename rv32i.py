@@ -281,7 +281,7 @@ def line_to_bits(line, labels={}, address=0):
     if instruction in utypes:
         rd, upimm = args
         rd = register_to_bits(rd)
-        check_imm(upimm, 20)
+        check_imm(int(upimm), 20) #TODO TELL AVI
         upimm = BitArray(int=int(upimm), length=20)
         bits = upimm + rd + op_codes[instruction]
 

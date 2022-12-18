@@ -49,14 +49,18 @@ class Controller:
         if filename == None:
             while 1:
                 # get instruction line from user
-                instruction = self.prompt.get_instruction()
-                instruction.lower()
-                instruction = instruction.replace(',', '')
-                if 'stop' in instruction or 'escape' in instruction:
-                    print(self.model)
-                    return
-                # compile assembly to binary (bitstring)
-                binary = self.compile_line_instruct(instruction)
+                binary = -1
+                while binary is -1:
+                    instruction = self.prompt.get_instruction()
+                    print(instruction)
+                    instruction.lower()
+                    instruction = instruction.replace(',', '')
+                    if 'stop' in instruction or 'escape' in instruction:
+                        print(self.model)
+                        return
+                    # compile assembly to binary (bitstring)
+                    binary = self.compile_line_instruct(instruction)
+                    
                 # update instruction memory
                 self.instruction_memory[self.model.get_pc.uint] = binary
                 # do_clock tells model to run
@@ -258,20 +262,5 @@ class PromptCLI(Prompt):
         filename = input('Enter file name: ')
         return filename
 
-class PromptEmulation(Prompt):
-    def __init__(self):
-        self.possible_instructions = []
 
-    def get_instruction():
-        instruct = input('Enter instruction: ')
-        # if branch or jump reject
-        while instruct[0] == 'b' or instruct[0] == 'j':
-            print("Only I Types, R Types, and S Types supported in \
-                 line-by-line mode")
-            instruct = PromptCLI.retry_instruction()
-        return instruct
-
-    def get_file():
-        filename = input('Enter file name: ')
-        return filename
 
