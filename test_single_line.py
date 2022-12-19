@@ -6,7 +6,7 @@ import random
 from bitstring import BitArray
 
 possible_instructions = ['lw','addi','slli','slti','sltiu','xori','srli',
-'srai','ori','andi','auipc','sw','add','sub','sll','slt','sltu','xor','srl',
+'srai','ori','andi','sw','add','sub','sll','slt','sltu','xor','srl',#'auipc',
 'sra','or','and','lui']
 reg_index = ["x00","x01","x02","x03","x04","x05","x06","x07","x08","x09","x10","x11","x12","x13","x14","x15","x16","x17","x18","x19","x20","x21","x22","x23","x24","x25","x26","x27","x28","x29","x30","x31"]
 reg_names = ["zero", "ra", "sp","gp","tp","t0","t1","t2","s0","s1","a0","a1","a2","a3","a4","a5","a6","a7", "s2","s3","s4","s5","s6","s7","s8","s9","s10","s11","t3","t4","t5","t6"]
@@ -40,6 +40,7 @@ args_data = {
 class PromptEmulation(Prompt):
     def __init__(self) -> None:
         self.data = False
+        self.count = 0
     #    model = model
     #    self.controller = controller
     #    pass
@@ -48,6 +49,7 @@ class PromptEmulation(Prompt):
         self.check_prev_data()
         self.good_to_send = False
         while not self.good_to_send:
+            self.count +=1
             pre_sent = {}
             pre_sent['intr'] = random.choice(possible_instructions)
             pre_sent['rs1'] = self.get_modified_reg()
@@ -56,6 +58,11 @@ class PromptEmulation(Prompt):
             pre_sent['imm'] = random.randint(0,2047)
             self.good_to_send = True
             self.data = self.check_instruction(pre_sent)
+            if self.data == None:
+                self.good_to_send = False
+            if self.count >100:
+                print("everything worked correctly")
+                return 'stop'
 
         return self.make_instruction()
 
@@ -85,7 +92,10 @@ class PromptEmulation(Prompt):
                 future = self.data['future']
                 if isinstance(future,BitArray):
                     future = future.uint
-                if not model.get_registers.get_data(BitArray(uint=rd,length=5)).uint == future:
+                if self.data['rd'] == 0:
+                    future = 0
+                if not model.get_registers.get_data(BitArray(uint=rd,length=5)).uint == future and\
+                    not model.get_registers.get_data(BitArray(uint=rd,length=5)).int == future :
                     #raise ValueError("wrong register value")
                     None
             if 'next pc' in self.data.keys():
@@ -93,7 +103,7 @@ class PromptEmulation(Prompt):
                     #raise ValueError("wrong pc value")
                     None
             if 'data mem addr' in self.data.keys():
-                if not controller.get_data_mem(BitArray(int=self.data['data mem addr'],length=32).uint) == model.get_registers.get_data(BitArray(uint=self.data['rs2'],length=5)):
+                if not controller.get_data_mem(BitArray(uint=self.data['data mem addr'],length=32).uint) == model.get_registers.get_data(BitArray(uint=self.data['rs2'],length=5)):
                     #raise ValueError("wrong data mem value")
                     None
 
@@ -132,7 +142,20 @@ class PromptEmulation(Prompt):
         if len(controller.data_memory.keys())<1:
             self.good_to_send = False
             return
-        out['imm'] = random.choice(list(controller.data_memory.keys()))-model.get_registers.get_data(BitArray(uint=data['rs1'],length=5)).uint
+        goal_mem_adr = random.choice(list(controller.data_memory.keys()))
+        reg_offset = model.get_registers.get_data(BitArray(uint=data['rs1'],length=5)).uint
+        count = 0
+        while goal_mem_adr-reg_offset >2047 or goal_mem_adr-reg_offset<-2048:
+            count +=1
+            out['rs1'] = self.get_modified_reg()
+            reg_offset = model.get_registers.get_data(BitArray(uint=out['rs1'],length=5)).int
+            if count >20:
+                return
+            None
+        
+        out['imm'] = BitArray(int=(goal_mem_adr-reg_offset),length=12).int
+        if out['imm'] not in controller.data_memory.keys():
+            return
         out['future'] = controller.get_data_mem(out['imm'])
         out['next pc'] = model.get_pc.uint + 4 
         return out
@@ -159,9 +182,9 @@ class PromptEmulation(Prompt):
             case 'xor':
                 out['future'] = a^b
             case 'srl':
-                out['future'] = a>>(b.uint)
+                out['future'] = a.uint>>(b.uint)
             case 'sra':
-                out['future'] = BitArray(int=a.int//(2^b.uint),length=32)
+                out['future'] = sra(a.int,32,b.uint)#BitArray(int=a.int//(2^b.uint),length=32)
             case 'or':
                 out['future'] = a|b
             case 'and':
@@ -180,7 +203,9 @@ class PromptEmulation(Prompt):
         a = BitArray(uint=out['rs1'],length=5)
         b = model.get_registers.get_data(a)
         out['imm'] = ((out['imm']+b).uint %4)-out['imm']
-        out['data mem addr'] = out['imm']+model.get_registers.get_data(BitArray(uint=out['rs1'],length=5)).uint
+        dmaddr = BitArray(uint=(BitArray(int=out['imm'],length=32).uint+model.get_registers.get_data(BitArray(uint=out['rs1'],length=5)).uint),length=33)
+        c = dmaddr[-32:]
+        out['data mem addr'] = c.uint
         out['future'] = model.get_registers.get_data(BitArray(uint=out['rs2'],length=5))
         out['next pc'] = model.get_pc.uint + 4 
         del out['rd']
@@ -188,7 +213,14 @@ class PromptEmulation(Prompt):
 
 
 
-
+# x is an n-bit number to be shifted m times
+def sra(x,n,m):
+    if x & 2**(n-1) != 0:  # MSB is 1, i.e. x is negative
+        filler = int('1'*m + '0'*(n-m),2)
+        x = (x >> m) | filler  # fill in 0's with 1's
+        return x
+    else:
+        return x >> m
 
 
 prompt = PromptEmulation()

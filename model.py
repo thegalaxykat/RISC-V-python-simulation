@@ -668,7 +668,7 @@ class MVP_Model(Model):
                 b = b.uint
             except AttributeError:
                 None
-            return BitArray(int=a >> (b), length=32)
+            return BitArray(uint=a >> (b), length=32)
 
         def sra(self, a, b):
             """
