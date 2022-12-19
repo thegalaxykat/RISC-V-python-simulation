@@ -98,16 +98,13 @@ class PromptEmulation(Prompt):
                     future = 0
                 if not model.get_registers.get_data(BitArray(uint=rd,length=5)).uint == future and\
                     not model.get_registers.get_data(BitArray(uint=rd,length=5)).int == future :
-                    #raise ValueError("wrong register value")
-                    None
+                    raise ValueError("wrong register value")
             if 'next pc' in self.data.keys():
                 if not model.get_pc.uint == self.data['next pc']:
-                    #raise ValueError("wrong pc value")
-                    None
+                    raise ValueError("wrong pc value")
             if 'data mem addr' in self.data.keys():
                 if not controller.get_data_mem(BitArray(uint=self.data['data mem addr'],length=32).uint) == model.get_registers.get_data(BitArray(uint=self.data['rs2'],length=5)):
-                    #raise ValueError("wrong data mem value")
-                    None
+                    raise ValueError("wrong data mem value")
 
     def get_modified_reg(self):
         reg_data = None
@@ -217,12 +214,7 @@ class PromptEmulation(Prompt):
 
 # x is an n-bit number to be shifted m times
 def sra(x,n,m):
-    if x & 2**(n-1) != 0:  # MSB is 1, i.e. x is negative
-        filler = int('1'*m + '0'*(n-m),2)
-        x = (x >> m) | filler  # fill in 0's with 1's
-        return x
-    else:
-        return x >> m
+    return BitArray(int=x//(2**m), length=n)
 
 
 prompt = PromptEmulation()
