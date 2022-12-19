@@ -56,7 +56,7 @@ class Controller:
                         return
                     # compile assembly to binary (bitstring)
                     binary = self.compile_line_instruct(instruction)
-                    
+
                 # update instruction memory
                 self.instruction_memory[self.model.get_pc.uint] = binary
                 # do_clock tells model to run
@@ -202,8 +202,7 @@ class PromptCLI(Prompt):
         instruct = input('Enter instruction: ')
         # if branch or jump reject
         while instruct[0] == 'b' or instruct[0] == 'j':
-            print("Only I Types, R Types, and S Types supported in \
-                 line-by-line mode")
+            print("Only I Types, R Types, and S Types supported in line-by-line mode")
             instruct = PromptCLI.retry_instruction()
         return instruct
 
@@ -214,6 +213,3 @@ class PromptCLI(Prompt):
     def get_file():
         filename = input('Enter file name: ')
         return filename
-
-
-
