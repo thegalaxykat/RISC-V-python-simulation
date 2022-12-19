@@ -61,6 +61,7 @@ class Controller:
                 self.instruction_memory[self.model.get_pc.uint] = binary
                 # do_clock tells model to run
                 self.model.do_instruction()
+                self.view.draw()
 
         # Assembly *file* mode
         else:

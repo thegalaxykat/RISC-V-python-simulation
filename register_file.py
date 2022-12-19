@@ -41,7 +41,7 @@ class RegisterFile:
         self.we = False
         self.regfile = []
         self.modified_regs = []
-        self.fullreg = True
+        self.fullreg = False
         self.generate_registers()
 
     def generate_registers(self):

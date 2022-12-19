@@ -49,5 +49,5 @@ class TextView(CPUView):
         pointer counter to help ensure that
         """
         print(f"Intruction : {self.cpu.instruction.hex}")
-        print(f"PC : {self.cpu.pc.hex}")
+        print(f"PC : {self.cpu.get_pc.hex}")
         print(self.cpu)

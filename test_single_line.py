@@ -2,6 +2,8 @@
 from controller import Controller, Prompt
 from model import MVP_Model
 from register_file import RegisterFile
+
+from cpu_view import TextView
 import random
 from bitstring import BitArray
 
@@ -225,7 +227,8 @@ def sra(x,n,m):
 
 prompt = PromptEmulation()
 model = MVP_Model(register_file=RegisterFile())
-controller = Controller(model,view=None)
+view = TextView(model)
+controller = Controller(model,view)
 controller.prompt = prompt
 
 

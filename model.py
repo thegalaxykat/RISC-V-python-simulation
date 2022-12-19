@@ -415,7 +415,7 @@ class MVP_Model(Model):
         return BitArray(int=b, length=32)  # and extend it to 32 bits
 
     @property
-    def instuction(self):
+    def instruction(self):
         return self._current_instruction
 
     def _memory_address(self):
