@@ -86,6 +86,7 @@ class Controller:
                 self.model.do_instruction()
                 reg = self.model.get_registers
                 reg.fullreg = False
+                self.view.draw()
             print(self.model.get_registers)
 
     def reg_number(self, reg):
@@ -127,6 +128,8 @@ class Controller:
         pc = self.model.get_pc.uint
         # parse line and return binary instruction
         line = self.ap.parse_line(instruct)
+        if line is -1:
+            return -1
         return self.ap.return_line(line, pc)
 
     def get_instruct_mem(self, address):

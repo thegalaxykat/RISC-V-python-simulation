@@ -48,6 +48,9 @@ class TextView(CPUView):
         out the entire register file. It will also print out the
         pointer counter to help ensure that
         """
-        print(f"Instruction : {self.cpu.instruction.hex}")
+        if self.cpu.instruction != None:
+            print(f"Instruction : {self.cpu.instruction.hex}")
+        else:
+            print()
         print(f"PC : {self.cpu.get_pc.hex}")
         print(self.cpu)

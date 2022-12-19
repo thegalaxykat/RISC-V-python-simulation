@@ -62,7 +62,7 @@ class PromptEmulation(Prompt):
             self.data = self.check_instruction(pre_sent)
             if self.data == None:
                 self.good_to_send = False
-            if self.count >100:
+            if self.count >1000:
                 print("everything worked correctly")
                 return 'stop'
 
