@@ -33,21 +33,42 @@ Each of these methods are described in more detail below.
 To test assembly code live, a line at a time, simply run `python3 main.py`. You will be prompted to type in assembly code (e.g `addi t0, zero, 42` to store the immediate  `42` to register t0).
 
 ```bash
-Instruction : addi t0, zero, 42
-PC : 0
+Enter instruction: addi x2 x0 42
+addi x2 x0 42
+0x00000000
+Fetch
+0x00000004
+Decode
+0x00000004
+Execute I
+0x00000004
+alu writeback
+Intruction : 02a00113
+PC : 00000004
 +----Register File----+
-|x05 | t0   | 0000002A|
+|x00 | zero | 00000000|
+|x02 | sp | 0000002a|
 +---------------------+
 ```
 
 As you can see, the output only displays the registers that have been changed so far. Assuming that `addi t0, zero, 42` was already run, typing in `addi t1, t0, 63` would result in the following output. We implemented the output this way as we figured it would be way easier to debug a program without having to scroll through lots of meaningless register outputs (meaningless in the context of the user's specific program, that is).
 
 ```bash
-Instruction : addi t1, t0, 63
-PC : 4
+Enter instruction: addi sp sp 2
+addi sp sp 2
+0x00000004
+Fetch
+0x00000008
+Decode
+0x00000008
+Execute I
+0x00000008
+alu writeback
+Instruction : 00210113
+PC : 00000008
 +----Register File----+
-|x05 | t0   | 0000002A|
-|x06 | t1   | 00000069|
+|x00 | zero | 00000000|
+|x02 | sp | 0000002c|
 +---------------------+
 ```
 
@@ -56,16 +77,37 @@ PC : 4
 To test assembly code through a file, run `python3 main.py FILENAME.s` (where `FILENAME.s` is the filepath). This will run the simulation automatically and output the register file after executing each instruction. The following is an example output from a file containing the assembly code from the Line by Line example in non-verbose display.
 
 ```bash
-Instruction : addi t0, zero, 42
-PC : 0
+Enter instruction: addi x2 x0 42
+addi x2 x0 42
+0x00000000
+Fetch
+0x00000004
+Decode
+0x00000004
+Execute I
+0x00000004
+alu writeback
+Intruction : 02a00113
+PC : 00000004
 +----Register File----+
-|x05 | t0   | 0000002A|
+|x00 | zero | 00000000|
+|x02 | sp | 0000002a|
 +---------------------+
-Instruction : addi t1, t0, 63
-PC : 4
+Enter instruction: addi sp sp 2
+addi sp sp 2
+0x00000004
+Fetch
+0x00000008
+Decode
+0x00000008
+Execute I
+0x00000008
+alu writeback
+Instruction : 00210113
+PC : 00000008
 +----Register File----+
-|x05 | t0   | 0000002A|
-|x06 | t1   | 00000069|
+|x00 | zero | 00000000|
+|x02 | sp | 0000002c|
 +---------------------+
 ```
 
