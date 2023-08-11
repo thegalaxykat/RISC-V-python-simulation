@@ -117,7 +117,7 @@ We decided to implement this simulation using object oriented design. We followe
 
 ![MCV Diagram](MVC.png)
 
-Please read through the comments on our code and function docstrings for more information on precisely how the it works.
+You can read through the comments on our code and function docstrings for more information on precisely how the it works.
 
 
 ### Tests
